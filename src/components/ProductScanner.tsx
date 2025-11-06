@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Capacitor } from "@capacitor/core";
+import { captureImage, selectImage } from "@/services/camera";
+import { adMobService } from "@/services/admob";
 
 interface ProductScannerProps {
   onAnalysisComplete: (analysis: string, imageUrl: string) => void;
@@ -72,6 +75,80 @@ export const ProductScanner = ({ onAnalysisComplete }: ProductScannerProps) => {
     if (file) handleImageUpload(file);
   };
 
+  const handleNativeCamera = async () => {
+    if (!Capacitor.isNativePlatform()) {
+      // على الويب، استخدم input file
+      document.getElementById('camera-input')?.click();
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const imageData = await captureImage();
+      if (imageData) {
+        setPreview(imageData);
+        
+        const { data, error } = await supabase.functions.invoke("analyze-product", {
+          body: { imageData },
+        });
+
+        if (error) throw error;
+
+        if (data.error) {
+          toast.error(data.error);
+          setIsLoading(false);
+          return;
+        }
+
+        // عرض إعلان بيني بعد التحليل الناجح
+        await adMobService.showInterstitial();
+
+        toast.success("تم تحليل المنتج بنجاح!");
+        onAnalysisComplete(data.analysis, imageData);
+      }
+    } catch (error) {
+      console.error("Error with native camera:", error);
+      toast.error("حدث خطأ أثناء التقاط الصورة");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleNativeGallery = async () => {
+    if (!Capacitor.isNativePlatform()) {
+      document.getElementById('file-input')?.click();
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const imageData = await selectImage();
+      if (imageData) {
+        setPreview(imageData);
+        
+        const { data, error } = await supabase.functions.invoke("analyze-product", {
+          body: { imageData },
+        });
+
+        if (error) throw error;
+
+        if (data.error) {
+          toast.error(data.error);
+          setIsLoading(false);
+          return;
+        }
+
+        toast.success("تم تحليل المنتج بنجاح!");
+        onAnalysisComplete(data.analysis, imageData);
+      }
+    } catch (error) {
+      console.error("Error selecting from gallery:", error);
+      toast.error("حدث خطأ أثناء اختيار الصورة");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Card className="p-8 bg-card shadow-soft border-primary/10 transition-all hover:shadow-glow">
       <div className="space-y-6">
@@ -100,19 +177,15 @@ export const ProductScanner = ({ onAnalysisComplete }: ProductScannerProps) => {
               id="camera-input"
               disabled={isLoading}
             />
-            <label htmlFor="camera-input" className="block">
-              <Button
-                variant="default"
-                className="w-full bg-gradient-primary hover:opacity-90 transition-opacity shadow-soft"
-                disabled={isLoading}
-                asChild
-              >
-                <span>
-                  <Camera className="ml-2 h-5 w-5" />
-                  التقط صورة
-                </span>
-              </Button>
-            </label>
+            <Button
+              variant="default"
+              className="w-full bg-gradient-primary hover:opacity-90 transition-opacity shadow-soft"
+              disabled={isLoading}
+              onClick={handleNativeCamera}
+            >
+              <Camera className="ml-2 h-5 w-5" />
+              التقط صورة
+            </Button>
           </div>
 
           <div>
@@ -124,19 +197,15 @@ export const ProductScanner = ({ onAnalysisComplete }: ProductScannerProps) => {
               id="file-input"
               disabled={isLoading}
             />
-            <label htmlFor="file-input" className="block">
-              <Button
-                variant="outline"
-                className="w-full border-primary/30 hover:bg-primary/5 transition-colors"
-                disabled={isLoading}
-                asChild
-              >
-                <span>
-                  <Upload className="ml-2 h-5 w-5" />
-                  رفع صورة
-                </span>
-              </Button>
-            </label>
+            <Button
+              variant="outline"
+              className="w-full border-primary/30 hover:bg-primary/5 transition-colors"
+              disabled={isLoading}
+              onClick={handleNativeGallery}
+            >
+              <Upload className="ml-2 h-5 w-5" />
+              رفع صورة
+            </Button>
           </div>
         </div>
 

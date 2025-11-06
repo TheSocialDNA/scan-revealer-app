@@ -1,11 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ProductScanner } from "@/components/ProductScanner";
 import { AnalysisResults } from "@/components/AnalysisResults";
 import { ScanLine, Sparkles } from "lucide-react";
+import { adMobService } from "@/services/admob";
+import { Capacitor } from "@capacitor/core";
 
 const Index = () => {
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    // تهيئة AdMob عند تشغيل التطبيق
+    if (Capacitor.isNativePlatform()) {
+      adMobService.initialize().then(() => {
+        // عرض إعلان بانر في الأسفل
+        adMobService.showBanner();
+      });
+    }
+
+    return () => {
+      // إزالة البانر عند إغلاق التطبيق
+      if (Capacitor.isNativePlatform()) {
+        adMobService.removeBanner();
+      }
+    };
+  }, []);
 
   const handleAnalysisComplete = (analysisResult: string, image: string) => {
     setAnalysis(analysisResult);
