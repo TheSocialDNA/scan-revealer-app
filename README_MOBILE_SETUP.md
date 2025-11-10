@@ -36,6 +36,48 @@ npx cap add ios
 npx cap update ios
 ```
 
+## الخطوة 3.5: تغيير أيقونة التطبيق (مهم!)
+
+### لنظام Android:
+
+1. **تم إنشاء أيقونة مخصصة** في `public/app-icon.png`
+
+2. **إنشاء الأيقونات بالأحجام المطلوبة:**
+   - استخدم أداة مثل [Android Asset Studio](https://romannurik.github.io/AndroidAssetStudio/icons-launcher.html)
+   - أو استخدم أمر:
+   ```bash
+   # يمكنك استخدام ImageMagick لإنشاء الأحجام المختلفة
+   convert public/app-icon.png -resize 48x48 android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+   convert public/app-icon.png -resize 72x72 android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+   convert public/app-icon.png -resize 96x96 android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+   convert public/app-icon.png -resize 144x144 android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+   convert public/app-icon.png -resize 192x192 android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+   ```
+
+3. **أو يدوياً:** انسخ `public/app-icon.png` واستبدل الملفات في:
+   ```
+   android/app/src/main/res/mipmap-mdpi/ic_launcher.png (48x48)
+   android/app/src/main/res/mipmap-hdpi/ic_launcher.png (72x72)
+   android/app/src/main/res/mipmap-xhdpi/ic_launcher.png (96x96)
+   android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png (144x144)
+   android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png (192x192)
+   ```
+
+4. **للأيقونة الدائرية (Round Icon):** استبدل أيضاً:
+   ```
+   android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
+   android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
+   android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
+   android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
+   android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
+   ```
+
+### لنظام iOS:
+
+1. افتح `ios/App/App/Assets.xcassets/AppIcon.appiconset/`
+2. استبدل جميع ملفات الأيقونات بالأحجام المطلوبة من أيقونتك المخصصة
+3. أو استخدم Xcode لإضافة الأيقونة تلقائياً
+
 ## الخطوة 4: إعداد AdMob
 
 ### الحصول على معرفات AdMob:
